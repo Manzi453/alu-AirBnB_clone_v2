@@ -1,28 +1,23 @@
 #!/usr/bin/python3
-"""Fabric Script that distributes an archives"""
+from fabric.api import env, put, run
 
-
-from fabric.api import put, run, env
-from os.path import exists
-env.hosts = ['54.227.179.101', '3.90.204.71']
-
+env.hosts = ['3.85.110.215', '34.238.38.171']
+env.user = 'ubuntu'
 
 def do_deploy(archive_path):
-    """Archives to web-servers"""
-    if exists(archive_path) is False:
+    if not archive_path:
         return False
     try:
-        file_n = archive_path.split("/")[-1]
-        no_ext = file_n.split(".")[0]
-        path = "/data/web_static/releases/"
         put(archive_path, '/tmp/')
-        run('mkdir -p {}{}/'.format(path, no_ext))
-        run('tar -xzf /tmp/{} -C {}{}/'.format(file_n, path, no_ext))
-        run('rm /tmp/{}'.format(file_n))
-        run('mv {0}{1}/web_static/* {0}{1}/'.format(path, no_ext))
-        run('rm -rf {}{}/web_static'.format(path, no_ext))
+        archive = archive_path.split('/')[-1]
+        folder = archive.split('.')[0]
+        run('mkdir -p /data/web_static/releases/{}/'.format(folder))
+        run('tar -xzf /tmp/{} -C /data/web_static/releases/{}/'.format(archive, folder))
+        run('rm /tmp/{}'.format(archive))
+        run('mv /data/web_static/releases/{}/web_static/* /data/web_static/releases/{}/'.format(folder, folder))
+        run('rm -rf /data/web_static/releases/{}/web_static'.format(folder))
         run('rm -rf /data/web_static/current')
-        run('ln -s {}{}/ /data/web_static/current'.format(path, no_ext))
+        run('ln -s /data/web_static/releases/{}/ /data/web_static/current'.format(folder))
         return True
     except:
         return False
